@@ -1,7 +1,7 @@
 eyesight
 ========
 
-*Version 0.0.0*
+*Version 1.0.0*
 
 Simple script to enable/disable the built-in camera in OS X.
 

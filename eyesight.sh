@@ -9,7 +9,7 @@
 # CONSTANTS
 #
 EYESIGHT_NAME='eyesight'
-EYESIGHT_VERSION='0.0.0'
+EYESIGHT_VERSION='1.0.0'
 EYESIGHT_FILES=(
   "/System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC"
   "/System/Library/PrivateFrameworks/CoreMediaIOServices.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC"
