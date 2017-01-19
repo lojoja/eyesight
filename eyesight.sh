@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # eyesight
 # eyesight/eyesight.sh
