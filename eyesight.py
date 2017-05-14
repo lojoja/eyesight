@@ -11,8 +11,6 @@ import click
 from pathlib2 import Path
 import subprocess32
 
-__version__ = '1.1.0'
-
 PROGRAM_NAME = 'eyesight'
 MIN_MACOS_VERSION = 10.10
 CAMERA_FILES = [

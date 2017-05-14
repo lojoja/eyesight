@@ -3,7 +3,7 @@ from codecs import open
 from os import path
 from setuptools import setup
 
-from eyesight import __version__ as version
+from _version import __version__
 
 project_path = path.abspath(path.dirname(__file__))
 
@@ -12,8 +12,8 @@ with open(path.join(project_path, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='eyesight',
-    version=version,
-    description='Simple script to enable/disable the built-in iSight camera in macOS.',
+    version=__version__,
+    description='Simple program to enable/disable the built-in iSight camera in macOS.',
     long_description=long_description,
     url='https://github.com/lojoja/eyesight',
     author='lojoja',
