@@ -1,37 +1,64 @@
 eyesight
 ========
 
-*Version 1.0.1*
-
-Simple script to enable/disable the built-in camera in OS X.
+Simple program to enable/disable the built-in iSight camera in macOS.
 
 
 Requirements
 ------------
 
-* OS X 10.9.x+
-* [Homebrew](https://brew.sh)
+* macOS 10.10.x+
+* Python 2.7.x
+* System Integrity Protection must be [disabled](https://developer.apple.com/library/content/documentation/Security/Conceptual/System_Integrity_Protection_Guide/ConfiguringSystemIntegrityProtection/ConfiguringSystemIntegrityProtection.html)
 
 
 Installation
 ------------
 
+### Homebrew
+
 ```
-brew tap lojoja/main
-brew install eyesight
+$ brew tap lojoja/main
+$ brew install eyesight
+```
+
+### Git
+
+```
+$ git clone https://github.com/lojoja/eyesight.git eyesight
+$ cd eyesight
+$ python setup.py install
 ```
 
 
 Use
 ---
+
+### Basic
+
 Enable the camera:
 
 ```
-eyesight enable
+$ sudo eyesight --enable
 ```
 
 Disable the camera:
 
 ```
-eyesight disable
+$ sudo eyesight --disable
 ```
+
+### Brew Services
+
+eyesight provides a `brew services` integration when installed via Homebrew. This will automatically disable the camera
+every time the system boots guarding against e.g., OS upgrades that re-enable it. To start the service run:
+
+```
+$ sudo brew services start eyesight
+```
+
+
+License
+-------
+
+eyesight is released under the [MIT License](./LICENSE)
