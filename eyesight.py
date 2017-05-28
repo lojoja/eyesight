@@ -15,68 +15,104 @@ PROGRAM_NAME = 'eyesight'
 MIN_MACOS_VERSION = 10.10
 CAMERA_FILES = [
     Path('/System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC'),
-    Path('/System/Library/PrivateFrameworks/CoreMediaIOServices.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC'),
-    Path('/System/Library/PrivateFrameworks/CoreMediaIOServicesPrivate.framework/Versions/A/Resources/AVC.plugin/Contents/MacOS/AVC'),
-    Path('/System/Library/PrivateFrameworks/CoreMediaIOServicesPrivate.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC'),
+    Path('/System/Library/PrivateFrameworks/CoreMediaIOServices.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC'),  # noqa
+    Path('/System/Library/PrivateFrameworks/CoreMediaIOServicesPrivate.framework/Versions/A/Resources/AVC.plugin/Contents/MacOS/AVC'),  # noqa
+    Path('/System/Library/PrivateFrameworks/CoreMediaIOServicesPrivate.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC'),  # noqa
     Path('/System/Library/QuickTime/QuickTimeUSBVDCDigitizer.component/Contents/MacOS/QuickTimeUSBVDCDigitizer'),
     Path('/Library/CoreMediaIO/Plug-Ins/DAL/AppleCamera.plugin/Contents/MacOS/AppleCamera'),
     Path('/Library/CoreMediaIO/Plug-Ins/FCP-DAL/AppleCamera.plugin/Contents/MacOS/AppleCamera')
 ]
-DISABLE_FILE_MODE = 0o000
-ENABLE_FILE_MODE = 0o755
 
-
-def get_mac_version():
-    """Get system macOS version (e.g., 10.10)"""
-    version = platform.mac_ver()[0]
-    return float('.'.join(version.split('.')[:2]))
-
-
-def get_sip_status():
+def check_mac_version():
     """
-    Get System Integrity Protection status
+    Verify system macOS version is supported.
 
-    Possible return values are:
-        - None: SIP status could not be determined
-        - 'ENABLED': SIP is enabled
-        - 'DISABLED': SIP is disabled
+    :raises click.ClickException: When the system version is not supported.
+    """
+
+    version = platform.mac_ver()[0]
+    version = float('.'.join(version.split('.')[:2]))  # format as e.g., '10.10'
+
+    if version < MIN_MACOS_VERSION:
+        msg = '{0} requires macOS {1} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION)
+        raise click.ClickException(msg)
+
+
+def check_sip_status():
+    """
+    Verify System Integrity Protection (SIP) is disabled.
+
+    :raises click.ClickException: When SIP status is unknown or SIP is enabled.
     """
     try:
         status = subprocess32.check_output(['csrutil', 'status'])
     except subprocess32.CalledProcessError:
-        status = None
+        msg = 'Could not determine SIP status'
+        raise click.ClickException(msg)
 
-    if status:
-        # status string: 'System Integrity Protection status: disabled.\n'
-        status = status.split(': ')[1].strip('.\n').upper()
-    return status
+    # status string format example: 'System Integrity Protection status: disabled.\n'
+    status = status.split(': ')[1].strip('.\n').upper()
+
+    if status == 'ENABLED':
+        msg = 'SIP is enabled'
+        raise click.ClickException(msg)
+
+
+def check_user_permissions():
+    """
+    Check that program was started by root user.
+
+    :raises click.ClickException: When script is run by an unprivileged user.
+    """
+
+    if not os.geteuid() == 0:
+        msg = '{0} must be run as root'.format(PROGRAM_NAME)
+        raise click.ClickException(msg)
+
+
+def get_camera_files():
+    """
+    Get a list of `CAMERA_FILES` that exist on the system.
+
+    :raises click.ClickException: When no `CAMERA_FILES` exist.
+    """
+
+    files = [f for f in CAMERA_FILES if f.is_file()]
+
+    if not files:
+        msg = 'There are no camera files to modify'
+        raise click.ClickException(msg)
+
+    return files
 
 
 @click.command()
 @click.option('--enable/--disable', default=None)
 @click.version_option()
 def cli(enable):
-    """Command line entry point"""
-    if not os.geteuid() == 0:
-        raise click.ClickException('{} must be run as root'.format(PROGRAM_NAME))
+    """
+    Command line entry point.
 
-    if get_mac_version() < MIN_MACOS_VERSION:
-        raise click.ClickException('{} requires macOS {} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION))
+    Validates options, verifies the system is in a correct state,
+    and applies the specified action to the built-in camera.
 
-    sip = get_sip_status()
-    if sip is None:
-        raise click.ClickException('Could not determine SIP status')
-    elif sip == 'ENABLED':
-        raise click.ClickException('Camera state cannot be altered while SIP is enabled')
+    :param enable: Camera state flag. Enables if `True`, disables if `False`. Default is `None` (no-op).
+    """
 
     if enable is None:
-        raise click.UsageError('Missing option (--enable/--disable)')
+        msg = 'Missing option (--enable/--disable)'
+        raise click.UsageError(msg)
 
-    mode = ENABLE_FILE_MODE if enable else DISABLE_FILE_MODE
-    files = [f for f in CAMERA_FILES if f.is_file()]
+    check_user_permissions()
+    check_mac_version()
+    check_sip_status()
+
+    # Everything checks out so change the files
+    files = get_camera_files()
+    mode = 0o755 if enable else 0o000
 
     for f in files:
         f.chmod(mode)
 
-    action = 'enabled' if enable else 'disabled'
-    click.echo('Camera {}'.format(action))
+    msg = 'Camera {0}d'.format('enable' if enable else 'disable')
+    click.echo(msg)
