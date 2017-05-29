@@ -55,7 +55,6 @@ LOG_CONFIG = {
 }
 
 logger = logging.getLogger(PROGRAM_NAME)
-logging.config.dictConfig(LOG_CONFIG)
 
 
 def check_mac_version():
@@ -105,12 +104,8 @@ def check_user_permissions():
 
     :raises click.ClickException: When script is run by an unprivileged user.
     """
-    logger.info('Checking user privileges')
-
     if not os.geteuid() == 0:
-        msg = '{0} must be run as root'.format(PROGRAM_NAME)
-        logger.error(msg)
-        raise click.ClickException(msg)
+        raise click.ClickException('{0} must be run as root'.format(PROGRAM_NAME))
 
 
 def get_camera_files():
@@ -143,6 +138,9 @@ def cli(enable):
 
     :param enable: Camera state flag. Enables if `True`, disables if `False`. Default is `None` (no-op).
     """
+    check_user_permissions()
+
+    logging.config.dictConfig(LOG_CONFIG)
     logger.info('{0} started'.format(PROGRAM_NAME))
 
     if enable is None:
@@ -151,7 +149,6 @@ def cli(enable):
         raise click.UsageError(msg)
 
     logger.info('Verifying system state')
-    check_user_permissions()
     check_mac_version()
     check_sip_status()
     logger.info('System state OK')
