@@ -96,19 +96,10 @@ def get_camera_files():
 
 
 @click.command()
-@click.option('--enable/--disable', '-e/-d', default=None)
-@click.option('--verbose/--quiet', '-v/-q', is_flag=True, default=None)
+@click.option('--enable/--disable', '-e/-d', default=None, help='Set the camera state. No-op if missing.')
+@click.option('--verbose/--quiet', '-v/-q', is_flag=True, default=None, help='Specify verbosity level.')
 @click.version_option()
 def cli(enable, verbose):
-    """
-    Command line entry point.
-
-    Validates options, verifies the system is in a correct state,
-    and applies the specified action to the built-in camera.
-
-    :param enable: Camera state flag. Enables if `True`, disables if `False`. Default is `None` (no-op).
-    :param verbose: Console output flag. Shows extra details if `True`, minimal details if `False`. Default is `None`.
-    """
     log.init(logger, verbose)
     logger.debug('{0} {1} started'.format(PROGRAM_NAME, __version__))
 
