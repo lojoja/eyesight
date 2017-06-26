@@ -11,6 +11,11 @@
 	"folders":
 	[
 		{
+			"folder_exclude_patterns":
+			[
+				"__pycache__",
+				"*.egg-info"
+			],
 			"path": "."
 		}
 	]

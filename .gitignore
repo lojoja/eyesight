@@ -1,4 +1,6 @@
-*.egg
-*.egg-info/
+*.egg-ignore
+*.egg-info
 *.py[cod]
+.DS_Store
+__pycache__
 venv/
