@@ -1,21 +1,13 @@
-#!/usr/bin/env python
-"""
-eyesight
-
-Enable/disable the built-in camera on macOS.
-"""
 import logging
-import logging.config
-import logging.handlers
-import os
 import platform
 
 import click
 from pathlib2 import Path
 import subprocess32
 
-PROGRAM_NAME = 'eyesight'
-MIN_MACOS_VERSION = 10.10
+from eyesight import IS_ROOT, MIN_MACOS_VERSION, PROGRAM_NAME, UID, __version__
+import eyesight.log as log
+
 CAMERA_FILES = [
     Path('/System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC'),
     Path('/System/Library/PrivateFrameworks/CoreMediaIOServices.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC'),  # noqa
@@ -25,36 +17,9 @@ CAMERA_FILES = [
     Path('/Library/CoreMediaIO/Plug-Ins/DAL/AppleCamera.plugin/Contents/MacOS/AppleCamera'),
     Path('/Library/CoreMediaIO/Plug-Ins/FCP-DAL/AppleCamera.plugin/Contents/MacOS/AppleCamera')
 ]
-LOG_CONFIG = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'standard': {
-            'format': '%(asctime)s %(name)s [%(levelname)s]: %(message)s',
-            'datefmt': '%b %d %Y %H:%M:%S'
-        }
-    },
-    'handlers': {
-        'default': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'standard',
-            'filename': '{0}{1}.log'.format('/var/log/', PROGRAM_NAME),
-            'maxBytes': 10485760,
-            'backupCount': 5,
-            'encoding': 'utf8'
-        }
-    },
-    'loggers': {
-        '': {
-            'level': 'INFO',
-            'handlers': ['default'],
-            'propogate': 'no'
-        }
-    }
-}
 
 logger = logging.getLogger(PROGRAM_NAME)
+logger.setLevel(logging.DEBUG)
 
 
 def check_mac_version():
@@ -63,15 +28,14 @@ def check_mac_version():
 
     :raises click.ClickException: When the system version is not supported.
     """
-    logger.info('Checking macOS version')
+    logger.debug('Checking macOS version')
 
     version = platform.mac_ver()[0]
     version = float('.'.join(version.split('.')[:2]))  # format as e.g., '10.10'
+    logger.debug('macOS version is "{}"'.format(version))
 
     if version < MIN_MACOS_VERSION:
-        msg = '{0} requires macOS {1} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION)
-        logger.error(msg)
-        raise click.ClickException(msg)
+        raise click.ClickException('{0} requires macOS {1} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION))
 
 
 def check_sip_status():
@@ -80,22 +44,19 @@ def check_sip_status():
 
     :raises click.ClickException: When SIP status is unknown or SIP is enabled.
     """
-    logger.info('Checking SIP status')
+    logger.debug('Checking SIP status')
 
     try:
         status = subprocess32.check_output(['csrutil', 'status'])
     except subprocess32.CalledProcessError:
-        msg = 'Could not determine SIP status'
-        logger.error(msg)
-        raise click.ClickException(msg)
+        raise click.ClickException('Could not determine SIP status')
 
     # status string format example: 'System Integrity Protection status: disabled.\n'
     status = status.split(': ')[1].strip('.\n').upper()
+    logger.debug('SIP status is "{}"'.format(status))
 
     if status == 'ENABLED':
-        msg = 'SIP is enabled'
-        logger.error(msg)
-        raise click.ClickException(msg)
+        raise click.ClickException('SIP is enabled')
 
 
 def check_user_permissions():
@@ -104,8 +65,11 @@ def check_user_permissions():
 
     :raises click.ClickException: When script is run by an unprivileged user.
     """
-    if not os.geteuid() == 0:
-        raise click.ClickException('{0} must be run as root'.format(PROGRAM_NAME))
+    logger.debug('Checking user permissions')
+    logger.debug('System user ID is "{}"'.format(UID))
+
+    if not IS_ROOT:
+        raise click.ClickException('{} must be run as root'.format(PROGRAM_NAME))
 
 
 def get_camera_files():
@@ -114,22 +78,28 @@ def get_camera_files():
 
     :raises click.ClickException: When no `CAMERA_FILES` exist.
     """
-    logger.info('Collecting camera files')
+    logger.debug('Collecting camera files')
 
-    files = [f for f in CAMERA_FILES if f.is_file()]
+    files = []
 
-    if not files:
-        msg = 'There are no camera files to modify'
-        logger.error(msg)
-        raise click.ClickException(msg)
+    for f in CAMERA_FILES:
+        if f.is_file():
+            logger.debug('File found: "{}"'.format(f))
+            files.append(f)
+        else:
+            logger.debug('File missing: "{}"'.format(f))
+
+    if len(files) == 0:
+        raise click.ClickException('There are no camera files to modify')
 
     return files
 
 
 @click.command()
-@click.option('--enable/--disable', default=None)
+@click.option('--enable/--disable', '-e/-d', default=None)
+@click.option('--verbose/--quiet', '-v/-q', is_flag=True, default=None)
 @click.version_option()
-def cli(enable):
+def cli(enable, verbose):
     """
     Command line entry point.
 
@@ -137,30 +107,36 @@ def cli(enable):
     and applies the specified action to the built-in camera.
 
     :param enable: Camera state flag. Enables if `True`, disables if `False`. Default is `None` (no-op).
+    :param verbose: Console output flag. Shows extra details if `True`, minimal details if `False`. Default is `None`.
     """
-    check_user_permissions()
+    log.init(logger, verbose)
+    logger.debug('{0} {1} started'.format(PROGRAM_NAME, __version__))
 
-    logging.config.dictConfig(LOG_CONFIG)
-    logger.info('{0} started'.format(PROGRAM_NAME))
-
+    logger.debug('Checking command line options')
     if enable is None:
-        msg = 'Missing option (--enable/--disable)'
-        logger.error(msg)
-        raise click.UsageError(msg)
+        raise click.UsageError('Missing option (--enable/--disable)')
+    logger.debug('Command line options are OK')
 
-    logger.info('Verifying system state')
+    logger.info('Performing system checks')
     check_mac_version()
     check_sip_status()
-    logger.info('System state OK')
+    check_user_permissions()
+    logger.info('System is OK')
 
-    # Everything checks out so change the files
+    logger.info('Configuring camera')
     files = get_camera_files()
     mode = 0o755 if enable else 0o000
 
     for f in files:
-        logger.info('Processing {0}'.format(f))
+        logger.debug('Setting permissions to "{0}" for file "{1}"'.format(mode, f))
         f.chmod(mode)
 
-    msg = 'Camera {0}d'.format('enable' if enable else 'disable')
-    logger.info(msg)
-    click.echo(msg)
+    logger.info('Camera {0}d'.format('enable' if enable else 'disable'))
+
+
+def show_exception(self, file=None):
+    logger.error(self.message)
+
+
+click.ClickException.show = show_exception
+click.UsageError.show = show_exception
