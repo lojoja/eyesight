@@ -6,8 +6,7 @@ from click_log import ClickHandler, ColorFormatter as ClickFormatter
 from eyesight import IS_ROOT, PROGRAM_NAME
 
 
-# FILE = '/var/log/{}.log'.format(PROGRAM_NAME)
-FILE = '{}.log'.format(PROGRAM_NAME)
+FILE = '/var/log/{}.log'.format(PROGRAM_NAME)
 RECORD_FORMAT = '%(asctime)s %(name)s [%(levelname)s]: %(message)s'
 DATE_FORMAT = '%b %d %Y %H:%M:%S'
 VERBOSITY_LEVELS = {True: logging.DEBUG, False: logging.WARNING}
