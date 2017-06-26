@@ -48,9 +48,21 @@ Disable the camera:
 $ sudo eyesight --disable
 ```
 
+Verbose:
+
+```
+$ sudo eyesight --disable --verbose
+```
+
+Quiet:
+
+```
+$ sudo eyesight --disable --quiet
+```
+
 ### Brew Services
 
-eyesight provides a `brew services` integration when installed via Homebrew. This will automatically disable the camera
+eyesight provides a `brew services` integration when installed via [Homebrew](https://brew.sh). This will automatically disable the camera
 every time the system boots guarding against e.g., OS upgrades that re-enable it. To start the service run:
 
 ```
