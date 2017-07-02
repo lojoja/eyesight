@@ -10,4 +10,4 @@ MIN_MACOS_VERSION = 10.10
 UID = os.geteuid()
 IS_ROOT = UID == 0
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
