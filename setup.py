@@ -22,7 +22,7 @@ def get_version():
 setup(
     name='eyesight',
     version=get_version(),
-    description='Simple program to enable/disable the built-in iSight camera in macOS.',
+    description='Simple utility to enable/disable the built-in iSight camera in macOS.',
     long_description=get_long_description(),
     url='https://github.com/lojoja/eyesight',
     author='lojoja',
@@ -39,9 +39,7 @@ setup(
     keywords='macOS iSight camera privacy',
     packages=['eyesight'],
     install_requires=[
-        'click>=5.0',
-        'click_log>=0.1.8',
-        'pathlib2>=2.2.1',
+        'click>=6.0',
         'subprocess32>=3.2.7'
     ],
     entry_points={
