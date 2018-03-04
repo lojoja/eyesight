@@ -109,11 +109,11 @@ class Camera(object):
 
 
 class Context(object):
-    def __init__(self, enable, quiet=False):
+    def __init__(self, enable, verbose):
         logger.debug('Gathering system and environment details')
 
         self.enable = enable
-        self.quiet = quiet
+        self.verbose = verbose
         self.macos_version = self._get_mac_version()
         self.sip_enabled = self._get_sip_status()
         self.sudo = os.geteuid() == 0
