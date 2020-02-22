@@ -24,7 +24,7 @@ class ClickFormatter(logging.Formatter):
         'debug': 'blue',
         'error': 'red',
         'exception': 'red',
-        'warning': 'yellow'
+        'warning': 'yellow',
     }
 
     def format(self, record):
@@ -32,7 +32,9 @@ class ClickFormatter(logging.Formatter):
             level = record.levelname.lower()
             msg = record.msg
             if level in self.colors:
-                prefix = click.style('{0}: '.format(level.title()), fg=self.colors[level])
+                prefix = click.style(
+                    '{0}: '.format(level.title()), fg=self.colors[level]
+                )
                 if not isinstance(msg, (str, bytes)):
                     msg = str(msg)
                 msg = '\n'.join(prefix + l for l in msg.splitlines())
@@ -41,12 +43,7 @@ class ClickFormatter(logging.Formatter):
 
 
 class ClickHandler(logging.Handler):
-    error_levels = [
-        'critical',
-        'error',
-        'exception',
-        'warning'
-    ]
+    error_levels = ['critical', 'error', 'exception', 'warning']
 
     def emit(self, record):
         try:
@@ -65,6 +62,7 @@ logger.addHandler(click_handler)
 
 class Camera(object):
     """ Container for camera files and routines. """
+
     paths = [
         '/System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC',
         '/System/Library/PrivateFrameworks/CoreMediaIOServices.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC',  # noqa
@@ -72,7 +70,7 @@ class Camera(object):
         '/System/Library/PrivateFrameworks/CoreMediaIOServicesPrivate.framework/Versions/A/Resources/VDC.plugin/Contents/MacOS/VDC',  # noqa
         '/System/Library/QuickTime/QuickTimeUSBVDCDigitizer.component/Contents/MacOS/QuickTimeUSBVDCDigitizer',
         '/Library/CoreMediaIO/Plug-Ins/DAL/AppleCamera.plugin/Contents/MacOS/AppleCamera',
-        '/Library/CoreMediaIO/Plug-Ins/FCP-DAL/AppleCamera.plugin/Contents/MacOS/AppleCamera'
+        '/Library/CoreMediaIO/Plug-Ins/FCP-DAL/AppleCamera.plugin/Contents/MacOS/AppleCamera',
     ]
 
     def __init__(self, enable=True):
@@ -133,8 +131,19 @@ class Context(object):
 
 
 @click.command()
-@click.option('--enable/--disable', '-e/-d', default=None, help='Set the camera state. No-op if missing.')
-@click.option('--verbose/--quiet', '-v/-q', is_flag=True, default=None, help='Specify verbosity level.')
+@click.option(
+    '--enable/--disable',
+    '-e/-d',
+    default=None,
+    help='Set the camera state. No-op if missing.',
+)
+@click.option(
+    '--verbose/--quiet',
+    '-v/-q',
+    is_flag=True,
+    default=None,
+    help='Specify verbosity level.',
+)
 @click.version_option()
 @click.pass_context
 def cli(ctx, enable, verbose):
@@ -149,7 +158,9 @@ def cli(ctx, enable, verbose):
 
     logger.debug('Checking macOS version')
     if ctx.obj.macos_version < MIN_MACOS_VERSION:
-        raise click.ClickException('{0} requires macOS {1} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION))
+        raise click.ClickException(
+            '{0} requires macOS {1} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION)
+        )
 
     logger.debug('Checking SIP status')
     if ctx.obj.sip_enabled is None:
