@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 import logging
 import os
 import platform
 
 import click
-import subprocess32
 
 from eyesight import __version__  # noqa
 

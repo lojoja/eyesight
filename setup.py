@@ -33,18 +33,11 @@ setup(
         'Environment :: Console',
         'License :: OSI Approved :: MIT License',
         'Operating System :: MacOS :: MacOS X',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
     ],
     keywords='macOS iSight camera privacy',
     packages=['eyesight'],
-    install_requires=[
-        'click>=6.0',
-        'subprocess32>=3.2.7'
-    ],
-    entry_points={
-        'console_scripts': [
-            'eyesight=eyesight.core:cli',
-        ]
-    }
+    install_requires=['click>=7.0'],
+    entry_points={'console_scripts': ['eyesight=eyesight.core:cli',]},
 )
